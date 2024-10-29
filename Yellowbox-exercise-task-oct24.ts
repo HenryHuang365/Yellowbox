@@ -15,19 +15,44 @@ const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
-async function getDevicesOnlineStatus(
+async function getDevicesOnlineStatusOne(
   /** Array of device IDs to check the online status of */
   deviceIds: string[]
 ) {
-  // TODO: Write 3 separate implementations of this function assuming:
+  const map: Map<string, boolean> = new Map();
   // 1. The API Allows only 1 request at a time
-  // 2. The API Allows unlimited simultaneous requests, given that:
-  //     - each call takes 10s to return (not additive)
-  // 3. The API Allows a maximum of 5 simultaneous requests, given that:
-  //     - individual requests take a random amount of time between 1 and 3 seconds to complete
-  //     - simultaneous requests will not delay or slow each other
+  for (const deviceId of deviceIds) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${API_BEARER_TOKEN}`,
+        },
+      });
+      if (response.ok) {
+        const status = await response.json();
+        map.set(deviceId, status);
+      } else {
+        console.error(`Device: ${deviceId} online status fetch failed`);
+        map.set(deviceId, false); // Default to status: false for any fetch response that is not ok. 
+      }
+    } catch (error) {
+      console.error(`Device ${deviceId} online status fetch error message: `, error);
+      map.set(deviceId, false); // Default to status: false for any error happens in the fetch process
+    }
+  }
 
-  // Example use case of the function and return value:
-  // - E.g. deviceIds = [1, 2, 3] => function returns { 1: true, 2: true, 3: false }
-  // - Note the boolean values will depend on the API response
+  return map;
 }
+
+// TODO: Write 3 separate implementations of this function assuming:
+// 1. The API Allows only 1 request at a time
+// 2. The API Allows unlimited simultaneous requests, given that:
+//     - each call takes 10s to return (not additive)
+// 3. The API Allows a maximum of 5 simultaneous requests, given that:
+//     - individual requests take a random amount of time between 1 and 3 seconds to complete
+//     - simultaneous requests will not delay or slow each other
+
+// Example use case of the function and return value:
+// - E.g. deviceIds = [1, 2, 3] => function returns { 1: true, 2: true, 3: false }
+// - Note the boolean values will depend on the API response
