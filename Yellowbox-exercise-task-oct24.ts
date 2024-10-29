@@ -34,16 +34,57 @@ async function getDevicesOnlineStatusOne(
         map.set(deviceId, status);
       } else {
         console.error(`Device: ${deviceId} online status fetch failed`);
-        map.set(deviceId, false); // Default to status: false for any fetch response that is not ok. 
+        map.set(deviceId, false); // Default to false status for any fetch response that is not ok.
       }
     } catch (error) {
       console.error(`Device ${deviceId} online status fetch error message: `, error);
-      map.set(deviceId, false); // Default to status: false for any error happens in the fetch process
+      map.set(deviceId, false); // Default to false status for any error happens in the fetch process.
     }
   }
 
   return map;
 }
+
+/** Returns a map indicating whether each of the passed devices are online or offline
+ * @returns A map of booleans for each device ID indicating whether the device is online */
+async function getDevicesOnlineStatusTwo(
+  /** Array of device IDs to check the online status of */
+  deviceIds: string[]
+) {
+  const map: Map<string, boolean> = new Map();
+  // 2. The API Allows unlimited simultaneous requests, given that:
+  //     - each call takes 10s to return (not additive)
+
+  // Promise.all() reference: https://rapidapi.com/guides/parallel-api-requests
+  // Since each call takes 10s to return and the response time is not additive to the number of device ids,
+  // I can confidently use parallel processing (e.g., Promise.all) as all requests are guaranteed to complete within the same fixed time.
+  const responses = await Promise.all(
+    deviceIds.map((deviceId) =>
+      fetch(`${API_BASE_URL}/${deviceId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${API_BEARER_TOKEN}`,
+        },
+      }).catch((error) => {
+        console.error(`Device ${deviceId} online status fetch error message: `, error);
+        return null; // Handle fetch error by returning null
+      })
+    )
+  );
+
+  responses.forEach((response, index) => {
+    const deviceId = deviceIds[index];
+    if (response && response.ok) {
+      response.json().then((status) => map.set(deviceId, status));
+    } else {
+      console.error(`Device: ${deviceId} online status fetch failed`);
+      map.set(deviceId, false); // Default to false status for any error happens in the fetch process.
+    }
+  });
+
+  return map;
+}
+
 
 // TODO: Write 3 separate implementations of this function assuming:
 // 1. The API Allows only 1 request at a time
