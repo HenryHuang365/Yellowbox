@@ -31,7 +31,7 @@ const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
-async function getDevicesOnlineStatusOne(
+export async function getDevicesOnlineStatusOne(
   /** Array of device IDs to check the online status of */
   deviceIds: string[]
 ) {
@@ -67,7 +67,7 @@ async function getDevicesOnlineStatusOne(
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
-async function getDevicesOnlineStatusTwo(
+export async function getDevicesOnlineStatusTwo(
   /** Array of device IDs to check the online status of */
   deviceIds: string[]
 ) {
@@ -107,12 +107,9 @@ async function getDevicesOnlineStatusTwo(
 			}
 		})
 	);
-  
-  const sortedMap = new Map([...map.entries()].sort((a, b) => {
-    return Number(a[0]) - Number(b[0]); // Convert keys to numbers and sort
-  }));
 
-  return sortedMap;
+  const mapSorted = sortedMap(map);
+  return mapSorted;
 }
 
 
@@ -121,7 +118,7 @@ async function getDevicesOnlineStatusTwo(
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
-async function getDevicesOnlineStatusThree(
+export async function getDevicesOnlineStatusThree(
   /** Array of device IDs to check the online status of */
   deviceIds: string[]
 ) {
@@ -156,7 +153,8 @@ async function getDevicesOnlineStatusThree(
     await Promise.all(batch);
   }
 
-  return sortedMap(map);
+  const mapSorted = sortedMap(map);
+  return mapSorted;
 }
 
 
@@ -167,7 +165,7 @@ async function getDevicesOnlineStatusThree(
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
-async function getDevicesOnlineStatusFour(
+export async function getDevicesOnlineStatusFour(
   /** Array of device IDs to check the online status of */
   deviceIds: string[]
 ) {
@@ -220,11 +218,8 @@ async function getDevicesOnlineStatusFour(
   // Wait for all requests to complete
   await Promise.all(initialBatch);
 
-  const sortedMap = new Map([...map.entries()].sort((a, b) => {
-    return Number(a[0]) - Number(b[0]); // Convert keys to numbers and sort
-  }));
-
-  return sortedMap;
+  const mapSorted = sortedMap(map);
+  return mapSorted;
 }
 
 const sortedMap = (map: Map<string, boolean>) => {
