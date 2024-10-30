@@ -47,13 +47,15 @@ async function getDevicesOnlineStatusOne(
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
+
+// 2. The API Allows unlimited simultaneous requests, given that:
+//   - each call takes 10s to return (not additive)
 async function getDevicesOnlineStatusTwo(
   /** Array of device IDs to check the online status of */
   deviceIds: string[]
 ) {
   const map: Map<string, boolean> = new Map();
-  // 2. The API Allows unlimited simultaneous requests, given that:
-  //     - each call takes 10s to return (not additive)
+  
 
   // Promise.all() reference: https://rapidapi.com/guides/parallel-api-requests
   // Since each call takes 10s to return and the response time is not additive to the number of device ids,
@@ -81,6 +83,51 @@ async function getDevicesOnlineStatusTwo(
       map.set(deviceId, false); // Default to false status for any error happens in the fetch process.
     }
   });
+
+  return map;
+}
+
+/** Returns a map indicating whether each of the passed devices are online or offline
+ * @returns A map of booleans for each device ID indicating whether the device is online */
+
+// 3. The API Allows a maximum of 5 simultaneous requests, given that:
+//     - individual requests take a random amount of time between 1 and 3 seconds to complete
+//     - simultaneous requests will not delay or slow each other
+
+async function getDevicesOnlineStatusThree(
+  /** Array of device IDs to check the online status of */
+  deviceIds: string[]
+) {
+  const map: Map<string, boolean> = new Map();
+  const batchSize = 5;
+
+  // fetch promise function
+  const fetchDeviceStatus = async (deviceId: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${API_BEARER_TOKEN}`,
+        },
+      });
+      if (response.ok) {
+        const status = await response.json();
+        map.set(deviceId, status);
+      } else {
+        console.error(`Device: ${deviceId} online status fetch failed`);
+        map.set(deviceId, false);
+      }
+    } catch (error) {
+      console.error(`Device ${deviceId} online status fetch error message: `, error);
+      map.set(deviceId, false);
+    }
+  };
+
+  // Send 5 requests in a batch, await them to be finished and send the next batch
+  for (let i = 0; i < deviceIds.length; i += batchSize) {
+    const batch = deviceIds.slice(i, i + batchSize).map(fetchDeviceStatus);
+    await Promise.all(batch);
+  }
 
   return map;
 }
