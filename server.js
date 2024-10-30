@@ -7,6 +7,7 @@ const mockData = require('./mockData.json');
 const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
 
 app.use((req, res, next) => {
+  // authenticate the token
   const authHeader = req.headers.authorization;
   if (!authHeader || authHeader !== `Bearer ${API_BEARER_TOKEN}`) {
     return res.status(403).json({ error: 'Forbidden: Invalid or missing authorization token' });
