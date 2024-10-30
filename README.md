@@ -4,10 +4,10 @@
 This repository is for Yellowbow take home exercise.
 
 ## Table of Contents
-1. [Get Started](#get-started)
-2. [Preparation](#preparation)
-3. [Implementation](#implementation)
-4. [After Implementation & Troubleshooting](#after-implementation--troubleshooting)
+1. [Get Started](#1-get-started)
+2. [Preparation](#2-preparation)
+3. [Implementation](#3-implementation)
+4. [After Implementation & Troubleshooting](#4-after-implementation--troubleshooting)
 
 ---
 ### 1. Get Started
