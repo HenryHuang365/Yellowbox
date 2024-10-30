@@ -74,8 +74,7 @@ export async function getDevicesOnlineStatusTwo(
   const map: Map<string, boolean> = new Map();
   
   // Promise.all() reference: https://rapidapi.com/guides/parallel-api-requests
-  // Since the api takes unlimited simultaneous requests and each call takes 10s to return,
-  // I can confidently use parallel processing (e.g., Promise.all) as all requests are guaranteed to complete within the same fixed time.
+  // Since the api takes unlimited simultaneous requests and each call takes 10s to return, use Promise.all() to send all the requests
   const responses = await Promise.all(
     deviceIds.map((deviceId) =>
       fetch(`${API_BASE_URL}/api/unlimited-requests/${deviceId}`, {
