@@ -1,5 +1,5 @@
-// const API_BASE_URL = "https://api.example.com/deviceOnlineStatus"
-const API_BASE_URL = "http://localhost:8080"
+const API_BASE_URL = "https://api.example.com/deviceOnlineStatus"
+// const API_BASE_URL = "http://localhost:8080"
 const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
 
 // - An authorised GET request to https://api.example.com/deviceOnlineStatus/{deviceId} API will
@@ -39,7 +39,7 @@ export async function getDevicesOnlineStatusOne(
   
   for (const deviceId of deviceIds) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/one-request/${deviceId}`, {
+      const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${API_BEARER_TOKEN}`,
@@ -77,7 +77,7 @@ export async function getDevicesOnlineStatusTwo(
   // Since the api takes unlimited simultaneous requests and each call takes 10s to return, use Promise.all() to send all the requests
   const responses = await Promise.all(
     deviceIds.map((deviceId) =>
-      fetch(`${API_BASE_URL}/api/unlimited-requests/${deviceId}`, {
+      fetch(`${API_BASE_URL}/${deviceId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${API_BEARER_TOKEN}`,
@@ -127,7 +127,7 @@ export async function getDevicesOnlineStatusThree(
   // fetch promise function
   const fetchDeviceStatus = async (deviceId: string): Promise<void> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/limited-requests/${deviceId}`, {
+      const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${API_BEARER_TOKEN}`,
@@ -176,7 +176,7 @@ export async function getDevicesOnlineStatusFour(
   // Helper function to fetch device status with a timeout
   const fetchDeviceStatus = async (deviceId: string): Promise<void> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/limited-requests/${deviceId}`, {
+      const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${API_BEARER_TOKEN}`,
