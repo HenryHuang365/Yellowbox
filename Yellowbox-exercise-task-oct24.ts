@@ -36,7 +36,7 @@ export async function getDevicesOnlineStatusOne(
   deviceIds: string[]
 ) {
   const map: Map<string, boolean> = new Map();
-  
+
   for (const deviceId of deviceIds) {
     try {
       const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
@@ -49,12 +49,12 @@ export async function getDevicesOnlineStatusOne(
         const status = await response.json();
         map.set(deviceId, status);
       } else {
-        console.error(`Device: ${deviceId} online status fetch failed`);
-        map.set(deviceId, false); // Default to false status for any fetch response that is not ok.
+        console.error("error happened");
+        map.set(deviceId, false);
       }
     } catch (error) {
-      console.error(`Device ${deviceId} online status fetch error message: `, error);
-      map.set(deviceId, false); // Default to false status for any error happens in the fetch process.
+      console.error("error happened");
+      map.set(deviceId, false);
     }
   }
 
@@ -83,29 +83,29 @@ export async function getDevicesOnlineStatusTwo(
           Authorization: `Bearer ${API_BEARER_TOKEN}`,
         },
       }).catch((error) => {
-        console.error(`Device ${deviceId} online status fetch error message: `, error);
-        return null; // Handle fetch error by returning null
+        console.error(error);
+        return null;
       })
     )
   );
 
   await Promise.all(
-		responses.map(async (response, index) => {
-			const deviceId = deviceIds[index];
-			if (response && response.ok) {
-				try {
-					const status = await response.json(); // Await the JSON parsing
-					map.set(deviceId, status);
-				} catch (jsonError) {
-					console.error(`Failed to parse JSON for device ${deviceId}`, jsonError);
-					map.set(deviceId, false); // Default to false on JSON parse error
-				}
-			} else {
-				console.error(`Device: ${deviceId} online status fetch failed`);
-				map.set(deviceId, false); // Default to false for any non-OK response
-			}
-		})
-	);
+    responses.map(async (response, index) => {
+      const deviceId = deviceIds[index];
+      if (response && response.ok) {
+        try {
+          const status = await response.json();
+          map.set(deviceId, status);
+        } catch (jsonError) {
+          console.error(jsonError);
+          map.set(deviceId, false);
+        }
+      } else {
+        console.error("error happened");
+        map.set(deviceId, false);
+      }
+    })
+  );
 
   const mapSorted = sortedMap(map);
   return mapSorted;
@@ -124,7 +124,6 @@ export async function getDevicesOnlineStatusThree(
   const map: Map<string, boolean> = new Map();
   const batchSize = 5;
 
-  // fetch promise function
   const fetchDeviceStatus = async (deviceId: string): Promise<void> => {
     try {
       const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
@@ -137,16 +136,15 @@ export async function getDevicesOnlineStatusThree(
         const status = await response.json();
         map.set(deviceId, status);
       } else {
-        console.error(`Device: ${deviceId} online status fetch failed`);
+        console.error("error happened");
         map.set(deviceId, false);
       }
     } catch (error) {
-      console.error(`Device ${deviceId} online status fetch error message: `, error);
+      console.error(error);
       map.set(deviceId, false);
     }
   };
 
-  // Send 5 requests in a batch, await them to be finished and send the next batch
   for (let i = 0; i < deviceIds.length; i += batchSize) {
     const batch = deviceIds.slice(i, i + batchSize).map(fetchDeviceStatus);
     await Promise.all(batch);
