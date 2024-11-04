@@ -195,14 +195,14 @@ export async function getDevicesOnlineStatusFour(
 
   // Queue to control the concurrency
   const executeNext = (): Promise<void> => {
-    if (currentIndex >= deviceIds.length) return Promise.resolve(); // All requests processed
+    if (currentIndex >= deviceIds.length) return Promise.resolve();
     const deviceId = deviceIds[currentIndex++];
     activeRequests++;
 
     return fetchDeviceStatus(deviceId).finally(() => {
       activeRequests--;
       if (activeRequests < maxConcurrentRequests && currentIndex < deviceIds.length) {
-        return executeNext(); // Trigger the next request if limit is not reached
+        return executeNext();
       }
     });
   };
