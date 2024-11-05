@@ -7,7 +7,6 @@ const mockData = require('./mockData.json');
 const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
 
 app.use((req, res, next) => {
-  // authenticate the token
   const authHeader = req.headers.authorization;
   if (!authHeader || authHeader !== `Bearer ${API_BEARER_TOKEN}`) {
     return res.status(403).json({ error: 'Forbidden: Invalid or missing authorization token' });
@@ -41,7 +40,7 @@ app.get('/api/unlimited-requests/:deviceId', (req, res) => {
 
   setTimeout(() => {
     res.json({ online: mockData[deviceId] || false });
-  }, 10000); // Fixed 10 seconds respons time
+  }, 10000);
 });
 
 // Scenario 3: Max 5 simultaneous requests with random delay between 1-3 seconds
@@ -58,7 +57,7 @@ app.get('/api/limited-requests/:deviceId', (req, res) => {
   setTimeout(() => {
     activeRequestsCount--;
     res.json({ online: mockData[deviceId] || false });
-  }, delay); // Random 1 to 3 seconds response time
+  }, delay);
 });
 
 // Start the server
