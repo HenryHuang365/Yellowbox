@@ -53,7 +53,7 @@ export async function getDevicesOnlineStatusOne(
         map.set(deviceId, false);
       }
     } catch (error) {
-      console.error("error happened");
+      console.error(error);
       map.set(deviceId, false);
     }
   }
@@ -171,7 +171,6 @@ export async function getDevicesOnlineStatusFour(
   let activeRequests = 0;
   let currentIndex = 0;
 
-  // Helper function to fetch device status with a timeout
   const fetchDeviceStatus = async (deviceId: string): Promise<void> => {
     try {
       const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
@@ -184,16 +183,15 @@ export async function getDevicesOnlineStatusFour(
         const status = await response.json();
         map.set(deviceId, status);
       } else {
-        console.error(`Device: ${deviceId} online status fetch failed`);
+        console.error("error happened");
         map.set(deviceId, false);
       }
     } catch (error) {
-      console.error(`Device ${deviceId} online status fetch error message: `, error);
+      console.error(error);
       map.set(deviceId, false);
     }
   };
 
-  // Queue to control the concurrency
   const executeNext = (): Promise<void> => {
     if (currentIndex >= deviceIds.length) return Promise.resolve();
     const deviceId = deviceIds[currentIndex++];
@@ -207,12 +205,10 @@ export async function getDevicesOnlineStatusFour(
     });
   };
 
-  // Initiate the initial batch of requests
   const initialBatch = Array(Math.min(maxConcurrentRequests, deviceIds.length))
     .fill(null)
     .map(executeNext);
 
-  // Wait for all requests to complete
   await Promise.all(initialBatch);
 
   const mapSorted = sortedMap(map);
