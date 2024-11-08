@@ -62,6 +62,7 @@ app.get('/api/limited-requests/:deviceId', (req, res) => {
 
 const map = new Map();
 const requestWindow = 60;
+const requestLimit = 5;
 
 const checkRequest = (ip) => {
     const now = Date.now();
@@ -69,7 +70,7 @@ const checkRequest = (ip) => {
       map[ip].unshift();
     }
 
-    if (map[ip].length > 5) {
+    if (map[ip].length > requestLimit) {
       throw new Error("Max request limits");
     } else {
       map[ip].push(now);
