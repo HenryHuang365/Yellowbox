@@ -60,6 +60,22 @@ app.get('/api/limited-requests/:deviceId', (req, res) => {
   }, delay);
 });
 
+const map = new Map();
+const requestWindow = 60;
+
+const checkRequest = (ip) => {
+    const now = Date.now();
+    while ((map.get(ip) ?? [])[0] + requestWindow  < now) {
+      map[ip].unshift();
+    }
+
+    if (map[ip].length > 5) {
+      throw new Error("Max request limits");
+    } else {
+      map[ip].push(now);
+    }
+}
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
