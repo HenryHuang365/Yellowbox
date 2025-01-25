@@ -1,6 +1,6 @@
-const API_BASE_URL = "https://api.example.com/deviceOnlineStatus"
-// const API_BASE_URL = "http://localhost:8080"
-const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
+// const API_BASE_URL = "https://api.example.com/deviceOnlineStatus";
+const API_BASE_URL = "http://localhost:8080";
+const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`;
 
 // - An authorised GET request to https://api.example.com/deviceOnlineStatus/{deviceId} API will
 //   return a JSON body containing a single boolean true or false value.
@@ -26,7 +26,6 @@ const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
 // - E.g. deviceIds = [1, 2, 3] => function returns { 1: true, 2: true, 3: false }
 // - Note the boolean values will depend on the API response
 
-
 /* ------------------------------------ 1. The API Allows only 1 request at a time ------------------------------------------------- */
 
 /** Returns a map indicating whether each of the passed devices are online or offline
@@ -39,21 +38,24 @@ export async function getDevicesOnlineStatusOne(
 
   for (const deviceId of deviceIds) {
     try {
-      const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${API_BEARER_TOKEN}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/one-request/${deviceId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${API_BEARER_TOKEN}`,
+          },
+        }
+      );
       if (response.ok) {
         const status = await response.json();
         map.set(deviceId, status);
       } else {
-        console.error("error happened");
+        console.error("Error");
         map.set(deviceId, false);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error: ", error);
       map.set(deviceId, false);
     }
   }
@@ -61,9 +63,7 @@ export async function getDevicesOnlineStatusOne(
   return map;
 }
 
-
 /* ------------------------------------ 2. The API Allows unlimited simultaneous requests ------------------------------------------------- */
-
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
@@ -72,7 +72,7 @@ export async function getDevicesOnlineStatusTwo(
   deviceIds: string[]
 ) {
   const map: Map<string, boolean> = new Map();
-  
+
   // Promise.all() reference: https://rapidapi.com/guides/parallel-api-requests
   // Since the api takes unlimited simultaneous requests and each call takes 10s to return, use Promise.all() to send all the requests
   const responses = await Promise.all(
@@ -111,9 +111,7 @@ export async function getDevicesOnlineStatusTwo(
   return mapSorted;
 }
 
-
 /* ------------------------------------ 3. The API Allows a maximum of 5 simultaneous requests ------------------------------------------------- */
-
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
@@ -154,11 +152,10 @@ export async function getDevicesOnlineStatusThree(
   return mapSorted;
 }
 
-
 /* ------------------- 4. The API Allows a maximum of 5 simultaneous requests: alternative implementation using fetch queue ------------------ */
 
-// An alernative implementation for the api only takes 5 simultaneous requests. 
-// This implementation uses a queue to always ensure there are always 5 simultanous requsts send to the api to increase the efficiency. 
+// An alernative implementation for the api only takes 5 simultaneous requests.
+// This implementation uses a queue to always ensure there are always 5 simultanous requsts send to the api to increase the efficiency.
 
 /** Returns a map indicating whether each of the passed devices are online or offline
  * @returns A map of booleans for each device ID indicating whether the device is online */
@@ -199,7 +196,10 @@ export async function getDevicesOnlineStatusFour(
 
     return fetchDeviceStatus(deviceId).finally(() => {
       activeRequests--;
-      if (activeRequests < maxConcurrentRequests && currentIndex < deviceIds.length) {
+      if (
+        activeRequests < maxConcurrentRequests &&
+        currentIndex < deviceIds.length
+      ) {
         return executeNext();
       }
     });
@@ -216,12 +216,30 @@ export async function getDevicesOnlineStatusFour(
 }
 
 const sortedMap = (map: Map<string, boolean>) => {
-  return new Map([...map.entries()].sort((a, b) => {
-    return Number(a[0]) - Number(b[0]);
-  }));
-}
+  return new Map(
+    [...map.entries()].sort((a, b) => {
+      return Number(a[0]) - Number(b[0]);
+    })
+  );
+};
 
 (async () => {
-  const statusMap = await getDevicesOnlineStatusFour(["10", "11", "12", "13", "14", "15"]);
-  console.log(statusMap);
+  // const statusMap = await getDevicesOnlineStatusOne([
+  //   "10",
+  //   "11",
+  //   "12",
+  //   "13",
+  //   "14",
+  //   "15",
+  // ]);
+  // console.log(statusMap);
+
+  // another way to print is using promise attached callBack functions
+  await getDevicesOnlineStatusOne(["10", "11", "12", "13", "14", "15"])
+    .then((statusMap) => {
+      console.log(statusMap);
+    })
+    .catch((e) => {
+      console.error("Error: ", e);
+    });
 })();
