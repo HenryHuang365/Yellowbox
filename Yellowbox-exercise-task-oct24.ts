@@ -241,5 +241,8 @@ const sortedMap = (map: Map<string, boolean>) => {
     })
     .catch((e) => {
       console.error("Error: ", e);
+    })
+    .finally(() => {
+      console.log("Finished");
     });
 })();
