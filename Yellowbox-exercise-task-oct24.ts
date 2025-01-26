@@ -73,32 +73,36 @@ export async function getDevicesOnlineStatusTwo(
 ) {
   const map: Map<string, boolean> = new Map();
 
-  const responses = deviceIds.map(
-    async (deviceId) =>
-      await fetch(`${API_BASE_URL}/api/unlimited-requests/${deviceId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${API_BEARER_TOKEN}`,
-        },
-      })
+  const responses = await Promise.all(
+    deviceIds.map(
+      async (deviceId) =>
+        await fetch(`${API_BASE_URL}/api/unlimited-requests/${deviceId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${API_BEARER_TOKEN}`,
+          },
+        }).catch((error) => {
+          console.error(error);
+          return null;
+        })
+    )
   );
 
   await Promise.all(
     responses.map(async (response, index) => {
-      response.then(async (res) => {
-        try {
-          if (res.ok) {
-            const status = await res.json();
-            map.set(deviceIds[index], status);
-          } else {
-            console.error("Error");
-            map.set(deviceIds[index], false);
-          }
-        } catch (error) {
-          console.error(error);
-          map.set(deviceIds[index], false);
+      const deviceId = deviceIds[index];
+      try {
+        if (response !== null && response.ok) {
+          const status = await response.json();
+          map.set(deviceId, status);
+        } else {
+          console.error("Error");
+          map.set(deviceId, false);
         }
-      });
+      } catch (error) {
+        console.error(error);
+        map.set(deviceId, false);
+      }
     })
   );
 
@@ -117,19 +121,23 @@ export async function getDevicesOnlineStatusThree(
   const map: Map<string, boolean> = new Map();
   const batchSize = 5;
 
-  const fetchDeviceStatus = async (deviceId: string): Promise<void> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/${deviceId}`, {
+  const responses = async (deviceId: string): Promise<void> => {
+    const response = await fetch(
+      `${API_BASE_URL}/api/limited-requests/${deviceId}`,
+      {
         method: "GET",
         headers: {
           Authorization: `Bearer ${API_BEARER_TOKEN}`,
         },
-      });
+      }
+    );
+
+    try {
       if (response.ok) {
         const status = await response.json();
         map.set(deviceId, status);
       } else {
-        console.error("error happened");
+        console.error("Error");
         map.set(deviceId, false);
       }
     } catch (error) {
@@ -139,8 +147,10 @@ export async function getDevicesOnlineStatusThree(
   };
 
   for (let i = 0; i < deviceIds.length; i += batchSize) {
-    const batch = deviceIds.slice(i, i + batchSize).map(fetchDeviceStatus);
-    await Promise.all(batch);
+    const endIndex = Math.min(i + batchSize, deviceIds.length);
+    await Promise.all(
+      deviceIds.slice(i, endIndex).map((deviceId) => responses(deviceId))
+    );
   }
 
   const mapSorted = sortedMap(map);
@@ -230,7 +240,7 @@ const sortedMap = (map: Map<string, boolean>) => {
   // console.log(statusMap);
 
   // another way to print is using promise attached callBack functions
-  await getDevicesOnlineStatusOne(["10", "11", "12", "13", "14", "15"])
+  await getDevicesOnlineStatusThree(["10", "11", "12", "13", "14", "15"])
     .then((statusMap) => {
       console.log(statusMap);
     })
