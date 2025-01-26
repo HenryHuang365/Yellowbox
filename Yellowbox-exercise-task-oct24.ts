@@ -33,7 +33,7 @@ const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
 export async function getDevicesOnlineStatusOne(
   /** Array of device IDs to check the online status of */
   deviceIds: string[]
-) {
+): Promise<Map<string, boolean>> {
   const map: Map<string, boolean> = new Map();
 
   for (const deviceId of deviceIds) {
@@ -73,37 +73,32 @@ export async function getDevicesOnlineStatusTwo(
 ) {
   const map: Map<string, boolean> = new Map();
 
-  // Promise.all() reference: https://rapidapi.com/guides/parallel-api-requests
-  // Since the api takes unlimited simultaneous requests and each call takes 10s to return, use Promise.all() to send all the requests
-  const responses = await Promise.all(
-    deviceIds.map((deviceId) =>
-      fetch(`${API_BASE_URL}/${deviceId}`, {
+  const responses = deviceIds.map(
+    async (deviceId) =>
+      await fetch(`${API_BASE_URL}/api/unlimited-requests/${deviceId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${API_BEARER_TOKEN}`,
         },
-      }).catch((error) => {
-        console.error(error);
-        return null;
       })
-    )
   );
 
   await Promise.all(
     responses.map(async (response, index) => {
-      const deviceId = deviceIds[index];
-      if (response && response.ok) {
+      response.then(async (res) => {
         try {
-          const status = await response.json();
-          map.set(deviceId, status);
-        } catch (jsonError) {
-          console.error(jsonError);
-          map.set(deviceId, false);
+          if (res.ok) {
+            const status = await res.json();
+            map.set(deviceIds[index], status);
+          } else {
+            console.error("Error");
+            map.set(deviceIds[index], false);
+          }
+        } catch (error) {
+          console.error(error);
+          map.set(deviceIds[index], false);
         }
-      } else {
-        console.error("error happened");
-        map.set(deviceId, false);
-      }
+      });
     })
   );
 
