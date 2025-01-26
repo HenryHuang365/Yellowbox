@@ -26,6 +26,32 @@ const API_BEARER_TOKEN = `eyJ0eXAiOiJKadsCJhbGciOiJIy45wNiJ9.eyJpc3MiOiJ5ZWx...`
 // - E.g. deviceIds = [1, 2, 3] => function returns { 1: true, 2: true, 3: false }
 // - Note the boolean values will depend on the API response
 
+/* --------------------------- reuse function --------------------------- */
+const fetechResponse = async (
+  map: Map<string, boolean>,
+  deviceId: string,
+  fetchURL: string
+): Promise<void> => {
+  try {
+    const response = await fetch(`${fetchURL}/${deviceId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${API_BEARER_TOKEN}`,
+      },
+    });
+    if (response.ok) {
+      const status = await response.json();
+      map.set(deviceId, status);
+    } else {
+      console.error("Error");
+      map.set(deviceId, false);
+    }
+  } catch (error) {
+    console.error(error);
+    map.set(deviceId, false);
+  }
+};
+
 /* ------------------------------------ 1. The API Allows only 1 request at a time ------------------------------------------------- */
 
 /** Returns a map indicating whether each of the passed devices are online or offline
@@ -37,27 +63,7 @@ export async function getDevicesOnlineStatusOne(
   const map: Map<string, boolean> = new Map();
 
   for (const deviceId of deviceIds) {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/one-request/${deviceId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${API_BEARER_TOKEN}`,
-          },
-        }
-      );
-      if (response.ok) {
-        const status = await response.json();
-        map.set(deviceId, status);
-      } else {
-        console.error("Error");
-        map.set(deviceId, false);
-      }
-    } catch (error) {
-      console.error("Error: ", error);
-      map.set(deviceId, false);
-    }
+    await fetechResponse(map, deviceId, `${API_BASE_URL}/api/one-request`);
   }
 
   return map;
@@ -73,37 +79,10 @@ export async function getDevicesOnlineStatusTwo(
 ) {
   const map: Map<string, boolean> = new Map();
 
-  const responses = await Promise.all(
-    deviceIds.map(
-      async (deviceId) =>
-        await fetch(`${API_BASE_URL}/api/unlimited-requests/${deviceId}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${API_BEARER_TOKEN}`,
-          },
-        }).catch((error) => {
-          console.error(error);
-          return null;
-        })
-    )
-  );
-
   await Promise.all(
-    responses.map(async (response, index) => {
-      const deviceId = deviceIds[index];
-      try {
-        if (response !== null && response.ok) {
-          const status = await response.json();
-          map.set(deviceId, status);
-        } else {
-          console.error("Error");
-          map.set(deviceId, false);
-        }
-      } catch (error) {
-        console.error(error);
-        map.set(deviceId, false);
-      }
-    })
+    deviceIds.map((deviceId) =>
+      fetechResponse(map, deviceId, `${API_BASE_URL}/api/unlimited-requests`)
+    )
   );
 
   const mapSorted = sortedMap(map);
@@ -121,35 +100,19 @@ export async function getDevicesOnlineStatusThree(
   const map: Map<string, boolean> = new Map();
   const batchSize = 5;
 
-  const responses = async (deviceId: string): Promise<void> => {
-    const response = await fetch(
-      `${API_BASE_URL}/api/limited-requests/${deviceId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${API_BEARER_TOKEN}`,
-        },
-      }
-    );
-
-    try {
-      if (response.ok) {
-        const status = await response.json();
-        map.set(deviceId, status);
-      } else {
-        console.error("Error");
-        map.set(deviceId, false);
-      }
-    } catch (error) {
-      console.error(error);
-      map.set(deviceId, false);
-    }
-  };
-
   for (let i = 0; i < deviceIds.length; i += batchSize) {
     const endIndex = Math.min(i + batchSize, deviceIds.length);
     await Promise.all(
-      deviceIds.slice(i, endIndex).map((deviceId) => responses(deviceId))
+      deviceIds
+        .slice(i, endIndex)
+        .map(
+          async (deviceId) =>
+            await fetechResponse(
+              map,
+              deviceId,
+              `${API_BASE_URL}/api/limited-requests`
+            )
+        )
     );
   }
 
@@ -240,7 +203,7 @@ const sortedMap = (map: Map<string, boolean>) => {
   // console.log(statusMap);
 
   // another way to print is using promise attached callBack functions
-  await getDevicesOnlineStatusThree(["10", "11", "12", "13", "14", "15"])
+  await getDevicesOnlineStatusOne(["10", "11", "12", "13", "14", "15"])
     .then((statusMap) => {
       console.log(statusMap);
     })
